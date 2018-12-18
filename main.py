@@ -17,6 +17,10 @@ average_max_height = [-1 for i in range(max_n + 1)]
 average_max_height[0] = 0
 average_max_height[1] = 0
 
+prob_distr = [{} for i in range(max_n + 1)]
+prob_distr[0] = {0: 1}
+prob_distr[1] = {0: 1}
+
 cur_value = 0
 
 
@@ -60,6 +64,9 @@ def generate_binary_tree(n):
 
 # Computes average max height for tree of size n
 def compute_average_max_height(n):
+    if n > max_n:
+        return None
+
     if average_max_height[n] != -1:
         return average_max_height[n]
 
@@ -76,11 +83,42 @@ def compute_average_max_height(n):
     return ans
 
 
+# Computes probability distribution of max height for tree of size n
+def compute_prob_distr_max_height(n):
+    if n > max_n:
+        return None
+
+    if prob_distr[n] != {}:
+        return prob_distr[n]
+
+    for i in range(n):
+        left_distr = compute_prob_distr_max_height(i)
+        right_distr = compute_prob_distr_max_height(n - 1 - i)
+        coef = catalan_numbers[i] * catalan_numbers[n - 1 - i] / catalan_numbers[n]
+        for left_key in left_distr.keys():
+            for right_key in right_distr.keys():
+                left_prob = left_distr[left_key]
+                right_prob = right_distr[right_key]
+
+                write_to_key = 1 + max(left_key, right_key)
+                what_to_write = left_prob * right_prob * coef
+
+                if write_to_key in prob_distr[n]:
+                    prob_distr[n][write_to_key] += what_to_write
+                else:
+                    prob_distr[n][write_to_key] = what_to_write
+
+    return prob_distr[n]
+
+
 if __name__ == "__main__":
     tree_root = generate_binary_tree(5)
 
-    for i in range(max_n):
-        print("Tree of size " + str(i) + " has average maximum height equal to " + str(compute_average_max_height(i)))
+    # for i in range(max_n):
+    #     print("Tree of size " + str(i) + " has average maximum height equal to " + str(compute_average_max_height(i)))
+
+    print(str(compute_prob_distr_max_height(4)))
+
 
     # queue = [tree_root]
     # while len(queue) != 0:
