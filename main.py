@@ -31,6 +31,16 @@ prob_distr_leaves = [{} for i in range(max_n + 1)]
 prob_distr_leaves[0] = {0: 1}
 prob_distr_leaves[1] = {1: 1}
 
+# Fill list with -1 for each possible size of tree
+average_height = [-1 for i in range(max_n + 1)]
+# Set average max height for basic trees: empty and size of 1
+average_height[0] = 0
+average_height[1] = 0
+
+prob_distr_av_height = [{} for i in range(max_n + 1)]
+prob_distr_av_height[0] = {0: 1}
+prob_distr_av_height[1] = {0: 1}
+
 cur_value = 0
 
 
@@ -170,6 +180,68 @@ def compute_prob_distr_leaves(n):
     return prob_distr_leaves[n]
 
 
+def sub_func_average_height(n):
+    return compute_average_height(n) / n
+
+
+# Computes average height for tree of size n
+def compute_average_height(n):
+    if n > max_n:
+        return None
+
+    if average_height[n] != -1:
+        return average_height[n]
+
+    sum = 0
+    coef_sum = 0
+    for i in range(n):
+        coef = catalan_numbers[i] * catalan_numbers[n - 1 - i]
+        coef_sum += coef
+        sum += coef * ((n - 1) + compute_average_height(i) + compute_average_height(n - 1 - i))
+
+    ans = sum / coef_sum
+    average_height[n] = ans
+
+    return ans
+
+
+def sub_function_distr_av_height(n):
+    dict = compute_prob_distr_av_height(n)
+    res_dict = {}
+    for key in dict.keys():
+        res_dict[key/n] = dict[key]
+
+    return res_dict
+
+
+# Computes probability distribution of average height for tree of size n
+def compute_prob_distr_av_height(n):
+    if n > max_n:
+        return None
+
+    if prob_distr_av_height[n] != {}:
+        return prob_distr_av_height[n]
+
+    for i in range(n):
+        left_distr = compute_prob_distr_av_height(i)
+        right_distr = compute_prob_distr_av_height(n - 1 - i)
+        coef = catalan_numbers[i] * catalan_numbers[n - 1 - i] / catalan_numbers[n]
+        for left_key in left_distr.keys():
+            for right_key in right_distr.keys():
+                left_prob = left_distr[left_key]
+                right_prob = right_distr[right_key]
+
+                write_to_key = left_key + right_key + n - 1
+                what_to_write = left_prob * right_prob * coef
+
+                if write_to_key in prob_distr_av_height[n]:
+                    prob_distr_av_height[n][write_to_key] += what_to_write
+                else:
+                    prob_distr_av_height[n][write_to_key] = what_to_write
+
+    return prob_distr_av_height[n]
+
+
 if __name__ == "__main__":
     tree_root = generate_binary_tree(5)
 
@@ -181,7 +253,11 @@ if __name__ == "__main__":
     # for i in range(max_n):
     #     print("Tree of size " + str(i) + " has average leaves equal to " + str(compute_average_leaves(i)))
 
-    print(str(compute_prob_distr_leaves(5)))
+    # print(str(compute_prob_distr_leaves(5)))
+
+    print(str(sub_func_average_height(3)))
+
+    print(str(sub_function_distr_av_height(3)))
 
     # queue = [tree_root]
     # while len(queue) != 0:
